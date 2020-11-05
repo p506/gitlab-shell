@@ -17,19 +17,19 @@ describe 'bin/gitlab-shell personal_access_token' do
       res.content_type = 'application/json'
       res.status = 200
 
-      if params['key_id'] == '000'
-        res.body = { success: false, message: "Something wrong!"}.to_json
-      else
-        res.body = {
-          success: true,
-          token: 'aAY1G3YPeemECgUvxuXY',
-          scopes: params['scopes'],
-          expires_at: (params['expires_at'] && '9001-12-01')
-        }.to_json
-      end
+      res.body = if params['key_id'] == '000'
+                   { success: false, message: "Something wrong!" }.to_json
+                 else
+                   {
+                     success: true,
+                     token: 'aAY1G3YPeemECgUvxuXY',
+                     scopes: params['scopes'],
+                     expires_at: (params['expires_at'] && '9001-12-01')
+                   }.to_json
+                 end
     end
 
-    server.mount_proc('/api/v4/internal/discover') do |req, res|
+    server.mount_proc('/api/v4/internal/discover') do |_req, res|
       res.status = 200
       res.content_type = 'application/json'
       res.body = '{"id":100, "name": "Some User", "username": "someuser"}'
@@ -41,10 +41,10 @@ describe 'bin/gitlab-shell personal_access_token' do
 
     let(:output) do
       env = {
-        'SSH_CONNECTION'       => 'fake',
+        'SSH_CONNECTION' => 'fake',
         'SSH_ORIGINAL_COMMAND' => "personal_access_token #{args}"
       }
-      Open3.popen2e(env, "#{gitlab_shell_path} #{key_id}")[1].read()
+      Open3.popen2e(env, "#{gitlab_shell_path} #{key_id}")[1].read
     end
 
     let(:help_message) do

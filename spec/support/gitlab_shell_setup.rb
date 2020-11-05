@@ -22,7 +22,7 @@ RSpec.shared_context 'gitlab shell', shared_context: :metadata do
     @tmp_root_path ||= File.realpath(Dir.mktmpdir)
   end
 
-  def mock_server(server)
+  def mock_server(_server)
     raise NotImplementedError.new(
       'mock_server method must be implemented in order to include gitlab shell context'
     )
@@ -48,6 +48,7 @@ RSpec.shared_context 'gitlab shell', shared_context: :metadata do
 
     sleep(0.1) while @webrick_thread.alive? && @server.status != :Running
     raise "Couldn't start stub GitlabNet server" unless @server.status == :Running
+
     system(original_root_path, 'bin/compile')
 
     FileUtils.rm_rf(File.join(tmp_root_path, 'bin'))
@@ -55,8 +56,8 @@ RSpec.shared_context 'gitlab shell', shared_context: :metadata do
   end
 
   after(:all) do
-    @server.shutdown if @server
-    @webrick_thread.join if @webrick_thread
+    @server&.shutdown
+    @webrick_thread&.join
     FileUtils.rm_rf(tmp_root_path)
   end
 end

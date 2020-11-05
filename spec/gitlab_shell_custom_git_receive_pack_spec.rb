@@ -7,7 +7,7 @@ require 'base64'
 describe 'Custom bin/gitlab-shell git-receive-pack' do
   include_context 'gitlab shell'
 
-  let(:env) { {'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => 'git-receive-pack group/repo' } }
+  let(:env) { { 'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => 'git-receive-pack group/repo' } }
   let(:divider) { "remote: ========================================================================\n" }
 
   before(:context) do
@@ -15,11 +15,11 @@ describe 'Custom bin/gitlab-shell git-receive-pack' do
   end
 
   def mock_server(server)
-    server.mount_proc('/geo/proxy_git_ssh/info_refs_receive_pack') do |req, res|
+    server.mount_proc('/geo/proxy_git_ssh/info_refs_receive_pack') do |_req, res|
       res.content_type = 'application/json'
       res.status = 200
 
-      res.body = {"result" => "#{Base64.encode64('custom')}"}.to_json
+      res.body = { "result" => Base64.encode64('custom').to_s }.to_json
     end
 
     server.mount_proc('/geo/proxy_git_ssh/receive_pack') do |req, res|
@@ -28,7 +28,7 @@ describe 'Custom bin/gitlab-shell git-receive-pack' do
 
       output = JSON.parse(req.body)['output']
 
-      res.body = {"result" => output}.to_json
+      res.body = { "result" => output }.to_json
     end
 
     server.mount_proc('/api/v4/internal/allowed') do |req, res|
@@ -51,11 +51,11 @@ describe 'Custom bin/gitlab-shell git-receive-pack' do
             "action" => "geo_proxy_to_primary",
             "data" => {
               "api_endpoints" => ["/geo/proxy_git_ssh/info_refs_receive_pack", "/geo/proxy_git_ssh/receive_pack"],
-              "gl_username" =>   "custom",
-              "primary_repo" =>  "https://repo/path"
-            },
+              "gl_username" => "custom",
+              "primary_repo" => "https://repo/path"
+            }
           },
-          "gl_console_messages" => ["console", "message"]
+          "gl_console_messages" => %w[console message]
         }
         res.body = body.to_json
       else
@@ -103,7 +103,7 @@ describe 'Custom bin/gitlab-shell git-receive-pack' do
       let(:cmd) { "#{gitlab_shell_path} key-101" }
 
       it 'custom action is not performed' do
-        Open3.popen2e(env, cmd) do |stdin, stdout|
+        Open3.popen2e(env, cmd) do |_stdin, stdout|
           expect(stdout.gets).to eq("remote: \n")
           expect(stdout.gets).to eq(divider)
           expect(stdout.gets).to eq("remote: \n")

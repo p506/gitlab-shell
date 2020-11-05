@@ -47,7 +47,7 @@ describe 'bin/gitlab-shell-authorized-principals-check' do
     cmd = [
       authorized_principals_check_path,
       key_id,
-      principals,
+      principals
     ].flatten.compact
 
     output = IO.popen(cmd, &:read)

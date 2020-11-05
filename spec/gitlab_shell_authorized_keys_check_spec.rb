@@ -38,15 +38,15 @@ describe 'bin/gitlab-shell-authorized-keys-check' do
       expect(status).to be_success
     end
 
-    it' fails when not enough arguments are given' do
+    it ' fails when not enough arguments are given' do
       output, status = run!(key: nil)
 
       expect(output).to eq('')
       expect(status).not_to be_success
     end
 
-    it' fails when too many arguments are given' do
-      output, status = run!(key: ['a', 'b'])
+    it ' fails when too many arguments are given' do
+      output, status = run!(key: %w[a b])
 
       expect(output).to eq('')
       expect(status).not_to be_success
@@ -70,7 +70,7 @@ describe 'bin/gitlab-shell-authorized-keys-check' do
   describe 'without go features' do
     before(:all) do
       write_config(
-        "gitlab_url" => "http+unix://#{CGI.escape(tmp_socket_path)}",
+        "gitlab_url" => "http+unix://#{CGI.escape(tmp_socket_path)}"
       )
     end
 
@@ -80,7 +80,7 @@ describe 'bin/gitlab-shell-authorized-keys-check' do
   describe 'without go features (via go)', :go do
     before(:all) do
       write_config(
-        "gitlab_url" => "http+unix://#{CGI.escape(tmp_socket_path)}",
+        "gitlab_url" => "http+unix://#{CGI.escape(tmp_socket_path)}"
       )
     end
 

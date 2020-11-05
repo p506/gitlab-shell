@@ -6,7 +6,7 @@ describe 'bin/gitlab-shell git-lfs-authentication' do
   include_context 'gitlab shell'
 
   let(:path) { "https://gitlab.com/repo/path" }
-  let(:env) { {'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => 'git-lfs-authenticate project/repo download' } }
+  let(:env) { { 'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => 'git-lfs-authenticate project/repo download' } }
 
   before(:context) do
     write_config("gitlab_url" => "http+unix://#{CGI.escape(tmp_socket_path)}")
@@ -45,7 +45,7 @@ describe 'bin/gitlab-shell git-lfs-authentication' do
       when '100', 'someone' then
         res.status = 200
         res.body = '{"gl_id":"user-100", "status":true}'
-      when '101' then
+      when '101'
         res.status = 200
         res.body = '{"gl_id":"user-101", "status":true}'
       else
@@ -56,13 +56,13 @@ describe 'bin/gitlab-shell git-lfs-authentication' do
 
   describe 'lfs authentication command' do
     def successful_response
-      {
+      format("%s\n", {
         "header" => {
           "Authorization" => "Basic am9objpzb21ldG9rZW4="
         },
         "href" => "#{path}/info/lfs",
         "expires_in" => 1800
-      }.to_json + "\n"
+      }.to_json)
     end
 
     context 'when the command is allowed' do
@@ -70,7 +70,7 @@ describe 'bin/gitlab-shell git-lfs-authentication' do
         let(:cmd) { "#{gitlab_shell_path} key-100" }
 
         it 'lfs is successfully authenticated' do
-          output, stderr, status = Open3.capture3(env, cmd)
+          output, _stderr, status = Open3.capture3(env, cmd)
 
           expect(output).to eq(successful_response)
           expect(status).to be_success
@@ -81,7 +81,7 @@ describe 'bin/gitlab-shell git-lfs-authentication' do
         let(:cmd) { "#{gitlab_shell_path} username-someone" }
 
         it 'lfs is successfully authenticated' do
-          output, stderr, status = Open3.capture3(env, cmd)
+          output, _stderr, status = Open3.capture3(env, cmd)
 
           expect(output).to eq(successful_response)
           expect(status).to be_success
@@ -114,7 +114,7 @@ describe 'bin/gitlab-shell git-lfs-authentication' do
 
     context 'when an action for lfs authentication is unknown' do
       let(:cmd) { "#{gitlab_shell_path} key-100" }
-      let(:env) { {'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => 'git-lfs-authenticate project/repo unknown' } }
+      let(:env) { { 'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => 'git-lfs-authenticate project/repo unknown' } }
 
       it 'the command is disallowed' do
         divider = "remote: \nremote: ========================================================================\nremote: \n"

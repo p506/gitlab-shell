@@ -30,7 +30,7 @@ describe 'bin/gitlab-shell' do
     end
   end
 
-  def run!(args, env: {'SSH_CONNECTION' => 'fake'})
+  def run!(args, env: { 'SSH_CONNECTION' => 'fake' })
     cmd = [
       gitlab_shell_path,
       args
@@ -85,7 +85,7 @@ describe 'bin/gitlab-shell' do
     end
 
     it 'gets an ArgumentError on invalid input (multiple unknown)' do
-      _, stderr, status = run!(["this", "is", "all", "invalid"])
+      _, stderr, status = run!(%w[this is all invalid])
 
       expect(stderr).to match(/who='' is invalid/)
       expect(status).not_to be_success
@@ -101,7 +101,7 @@ describe 'bin/gitlab-shell' do
     end
 
     it 'succeeds and prints username when a valid known username is given in the middle of other input' do
-      output, _, status = run!(["-c/usr/share/webapps/gitlab-shell/bin/gitlab-shell", "username-someuser" ,"foo"])
+      output, _, status = run!(["-c/usr/share/webapps/gitlab-shell/bin/gitlab-shell", "username-someuser", "foo"])
 
       expect(output).to eq("Welcome to GitLab, @someuser!\n")
       expect(status).to be_success

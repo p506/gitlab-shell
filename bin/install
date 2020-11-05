@@ -4,12 +4,12 @@
 require_relative '../support/gitlab_config'
 
 config = GitlabConfig.new
-key_dir = File.dirname("#{config.auth_file}")
+key_dir = File.dirname(config.auth_file.to_s)
 repository_storage_paths = ARGV
 
 commands = [
   %W(mkdir -p #{key_dir}),
-  %W(chmod 700 #{key_dir}),
+  %W(chmod 700 #{key_dir})
 ]
 
 repository_storage_paths.each do |repository_storage_path|

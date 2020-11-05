@@ -5,14 +5,14 @@ require 'open3'
 describe 'bin/gitlab-shell 2fa_recovery_codes' do
   include_context 'gitlab shell'
 
-  let(:env) { {'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => '2fa_recovery_codes' } }
+  let(:env) { { 'SSH_CONNECTION' => 'fake', 'SSH_ORIGINAL_COMMAND' => '2fa_recovery_codes' } }
 
   before(:context) do
     write_config("gitlab_url" => "http+unix://#{CGI.escape(tmp_socket_path)}")
   end
 
   def mock_server(server)
-    server.mount_proc('/api/v4/internal/two_factor_recovery_codes') do |req, res|
+    server.mount_proc('/api/v4/internal/two_factor_recovery_codes') do |_req, res|
       res.content_type = 'application/json'
       res.status = 200
 
@@ -30,7 +30,7 @@ describe 'bin/gitlab-shell 2fa_recovery_codes' do
       end
     end
 
-    server.mount_proc('/api/v4/internal/discover') do |req, res|
+    server.mount_proc('/api/v4/internal/discover') do |_req, res|
       res.status = 200
       res.content_type = 'application/json'
       res.body = '{"id":100, "name": "Some User", "username": "someuser"}'

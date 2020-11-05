@@ -1,21 +1,36 @@
 # Exclude some of GitLab files
 AllCops:
-  TargetRubyVersion: 2.3
-  Exclude:
-    - 'spec/**/*'
-    - 'vendor/**/*'
-    - 'tmp/**/*'
-    - 'bin/**/*'
-    - 'hooks/**/*'
-    - 'Guardfile'
+  TargetRubyVersion: 2.7
+  NewCops: enable
+
+Lint/DuplicateRegexpCharacterClassElement: # (new in 1.1)
+  Enabled: true
+Lint/EmptyBlock: # (new in 1.1)
+  Enabled: true
+Lint/NoReturnInBeginEndBlocks: # (new in 1.2)
+  Enabled: true
+Lint/ToEnumArguments: # (new in 1.1)
+  Enabled: true
+Lint/UnmodifiedReduceAccumulator: # (new in 1.1)
+  Enabled: true
+Style/ArgumentsForwarding: # (new in 1.1)
+  Enabled: true
+Style/CollectionCompact: # (new in 1.2)
+  Enabled: true
+Style/DocumentDynamicEvalDefinition: # (new in 1.1)
+  Enabled: true
+Style/NegatedIfElseCondition: # (new in 1.2)
+  Enabled: true
+Style/SwapValues: # (new in 1.1)
+  Enabled: true
 
 Layout/DotPosition:
   Enabled: false
 
-Lint/AmbiguousBlockAssociation:
+Layout/LineLength:
   Enabled: false
 
-Metrics/LineLength:
+Lint/AmbiguousBlockAssociation:
   Enabled: false
 
 Metrics/MethodLength:
@@ -36,19 +51,16 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Naming/AccessorMethodName:
+  Enabled: false
+
 Style/Documentation:
   Enabled: false
 
 Style/StringLiterals:
   Enabled: false
 
-Style/StringLiterals:
-  Enabled: false
-
 Style/GlobalVars:
-  Enabled: false
-
-Style/AccessorMethodName:
   Enabled: false
 
 Style/GuardClause:
