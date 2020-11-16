@@ -13,6 +13,7 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/testhelper"
 )
 
+//go:generate openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -out ../internal/testhelper/testdata/testroot/certs/client/server.crt -keyout ../internal/testhelper/testdata/testroot/certs/client/key.pem -subj "/C=US/ST=California/L=San Francisco/O=GitLab/OU=GitLab-Shell/CN=localhost"
 func TestSuccessfulRequests(t *testing.T) {
 	testCases := []struct {
 		desc                                        string
@@ -38,8 +39,10 @@ func TestSuccessfulRequests(t *testing.T) {
 			selfSigned: true,
 		},
 		{
-			desc:           "Client certs with CA",
-			caFile:         path.Join(testhelper.TestRoot, "certs/valid/server.crt"),
+			desc:   "Client certs with CA",
+			caFile: path.Join(testhelper.TestRoot, "certs/valid/server.crt"),
+			// Run the command "go generate httpsclient_test.go" to
+			// regenerate the following test fixtures:
 			clientCAPath:   path.Join(testhelper.TestRoot, "certs/client/server.crt"),
 			clientCertPath: path.Join(testhelper.TestRoot, "certs/client/server.crt"),
 			clientKeyPath:  path.Join(testhelper.TestRoot, "certs/client/key.pem"),
