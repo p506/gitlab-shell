@@ -1,4 +1,4 @@
-.PHONY: validate verify verify_ruby verify_golang test test_ruby test_golang coverage coverage_golang setup _install build compile check clean
+.PHONY: validate verify verify_ruby verify_golang test test_ruby test_golang coverage coverage_golang setup _install build compile check clean test_certs
 
 GO_SOURCES := $(shell find . -name '*.go')
 VERSION_STRING := $(shell git describe --match v* 2>/dev/null || awk '$0="v"$0' VERSION 2>/dev/null || echo unknown)
@@ -44,3 +44,10 @@ check:
 
 clean:
 	rm -f bin/check bin/gitlab-shell bin/gitlab-shell-authorized-keys-check bin/gitlab-shell-authorized-principals-check
+
+internal/testhelper/testdata/testroot/certs/client/server.crt:
+	openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 \
+		-out $@ -keyout $(dir $@)key.pem \
+		-subj "/C=US/ST=California/L=San Francisco/O=GitLab/OU=GitLab-Shell/CN=localhost"
+
+test_certs: internal/testhelper/testdata/testroot/certs/client/server.crt
