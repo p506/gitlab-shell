@@ -4,14 +4,15 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"gitlab.com/gitlab-org/labkit/correlation"
 )
 
@@ -44,7 +45,17 @@ func WithClientCert(certPath, keyPath string) HTTPClientOpt {
 	}
 }
 
-func NewHTTPClient(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, selfSignedCert bool, readTimeoutSeconds uint64, opts ...HTTPClientOpt) *HttpClient {
+// Deprecated: use NewHTTPClientWithOpts
+func NewHTTPClient(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, selfSignedCert bool, readTimeoutSeconds uint64) *HttpClient {
+	c, err := NewHTTPClientWithOpts(gitlabURL, gitlabRelativeURLRoot, caFile, caPath, selfSignedCert, readTimeoutSeconds, nil)
+	if err != nil {
+		log.WithError(err).Error("new http client with opts")
+	}
+	return c
+}
+
+// NewHTTPClientWithOpts builds an HTTP client using the provided options
+func NewHTTPClientWithOpts(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, selfSignedCert bool, readTimeoutSeconds uint64, opts []HTTPClientOpt) (*HttpClient, error) {
 	hcc := &httpClientCfg{}
 
 	for _, opt := range opts {
@@ -53,14 +64,18 @@ func NewHTTPClient(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, self
 
 	var transport *http.Transport
 	var host string
+	var err error
 	if strings.HasPrefix(gitlabURL, unixSocketProtocol) {
 		transport, host = buildSocketTransport(gitlabURL, gitlabRelativeURLRoot)
 	} else if strings.HasPrefix(gitlabURL, httpProtocol) {
 		transport, host = buildHttpTransport(gitlabURL)
 	} else if strings.HasPrefix(gitlabURL, httpsProtocol) {
-		transport, host = buildHttpsTransport(hcc.certPath, hcc.keyPath, caFile, caPath, selfSignedCert, gitlabURL)
+		transport, host, err = buildHttpsTransport(hcc.certPath, hcc.keyPath, caFile, caPath, selfSignedCert, gitlabURL)
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		return nil
+		return nil, errors.New("unknown gitlab URL prefix")
 	}
 
 	c := &http.Client{
@@ -70,7 +85,7 @@ func NewHTTPClient(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, self
 
 	client := &HttpClient{Client: c, Host: host}
 
-	return client
+	return client, nil
 }
 
 func buildSocketTransport(gitlabURL, gitlabRelativeURLRoot string) (*http.Transport, string) {
@@ -92,7 +107,7 @@ func buildSocketTransport(gitlabURL, gitlabRelativeURLRoot string) (*http.Transp
 	return transport, host
 }
 
-func buildHttpsTransport(certPath, keyPath, caFile, caPath string, selfSignedCert bool, gitlabURL string) (*http.Transport, string) {
+func buildHttpsTransport(certPath, keyPath, caFile, caPath string, selfSignedCert bool, gitlabURL string) (*http.Transport, string, error) {
 	certPool, err := x509.SystemCertPool()
 
 	if err != nil {
@@ -121,8 +136,7 @@ func buildHttpsTransport(certPath, keyPath, caFile, caPath string, selfSignedCer
 	if certPath != "" && keyPath != "" {
 		cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 		if err != nil {
-			log.Printf("ERROR: unable to load x509 key pair: %v", err)
-			return nil, ""
+			return nil, "", err
 		}
 		tlsConfig.Certificates = []tls.Certificate{cert}
 		tlsConfig.BuildNameToCertificate()
@@ -132,7 +146,7 @@ func buildHttpsTransport(certPath, keyPath, caFile, caPath string, selfSignedCer
 		TLSClientConfig: tlsConfig,
 	}
 
-	return transport, gitlabURL
+	return transport, gitlabURL, err
 }
 
 func addCertToPool(certPool *x509.CertPool, fileName string) {

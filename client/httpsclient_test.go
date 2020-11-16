@@ -119,7 +119,8 @@ func setupWithRequests(t *testing.T, caFile, caPath, clientCAPath, clientCertPat
 		opts = append(opts, WithClientCert(clientCertPath, clientKeyPath))
 	}
 
-	httpClient := NewHTTPClient(url, "", caFile, caPath, selfSigned, 1, opts...)
+	httpClient, err := NewHTTPClientWithOpts(url, "", caFile, caPath, selfSigned, 1, opts)
+	require.NoError(t, err)
 
 	client, err := NewGitlabNetClient("", "", "", httpClient)
 	require.NoError(t, err)
