@@ -31,7 +31,10 @@ type HttpClient struct {
 
 type httpClientCfg struct {
 	keyPath, certPath string
+	caFile, caPath    string
 }
+
+func (hcc httpClientCfg) HaveCertAndKey() bool { return hcc.keyPath != "" && hcc.certPath != "" }
 
 // HTTPClientOpt provides options for configuring an HttpClient
 type HTTPClientOpt func(*httpClientCfg)
@@ -56,7 +59,10 @@ func NewHTTPClient(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, self
 
 // NewHTTPClientWithOpts builds an HTTP client using the provided options
 func NewHTTPClientWithOpts(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, selfSignedCert bool, readTimeoutSeconds uint64, opts []HTTPClientOpt) (*HttpClient, error) {
-	hcc := &httpClientCfg{}
+	hcc := &httpClientCfg{
+		caFile: caFile,
+		caPath: caPath,
+	}
 
 	for _, opt := range opts {
 		opt(hcc)
@@ -70,7 +76,7 @@ func NewHTTPClientWithOpts(gitlabURL, gitlabRelativeURLRoot, caFile, caPath stri
 	} else if strings.HasPrefix(gitlabURL, httpProtocol) {
 		transport, host = buildHttpTransport(gitlabURL)
 	} else if strings.HasPrefix(gitlabURL, httpsProtocol) {
-		transport, host, err = buildHttpsTransport(hcc.certPath, hcc.keyPath, caFile, caPath, selfSignedCert, gitlabURL)
+		transport, host, err = buildHttpsTransport(*hcc, selfSignedCert, gitlabURL)
 		if err != nil {
 			return nil, err
 		}
@@ -107,25 +113,25 @@ func buildSocketTransport(gitlabURL, gitlabRelativeURLRoot string) (*http.Transp
 	return transport, host
 }
 
-func buildHttpsTransport(certPath, keyPath, caFile, caPath string, selfSignedCert bool, gitlabURL string) (*http.Transport, string, error) {
+func buildHttpsTransport(hcc httpClientCfg, selfSignedCert bool, gitlabURL string) (*http.Transport, string, error) {
 	certPool, err := x509.SystemCertPool()
 
 	if err != nil {
 		certPool = x509.NewCertPool()
 	}
 
-	if caFile != "" {
-		addCertToPool(certPool, caFile)
+	if hcc.caFile != "" {
+		addCertToPool(certPool, hcc.caFile)
 	}
 
-	if caPath != "" {
-		fis, _ := ioutil.ReadDir(caPath)
+	if hcc.caPath != "" {
+		fis, _ := ioutil.ReadDir(hcc.caPath)
 		for _, fi := range fis {
 			if fi.IsDir() {
 				continue
 			}
 
-			addCertToPool(certPool, filepath.Join(caPath, fi.Name()))
+			addCertToPool(certPool, filepath.Join(hcc.caPath, fi.Name()))
 		}
 	}
 	tlsConfig := &tls.Config{
@@ -133,8 +139,8 @@ func buildHttpsTransport(certPath, keyPath, caFile, caPath string, selfSignedCer
 		InsecureSkipVerify: selfSignedCert,
 	}
 
-	if certPath != "" && keyPath != "" {
-		cert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if hcc.HaveCertAndKey() {
+		cert, err := tls.LoadX509KeyPair(hcc.certPath, hcc.keyPath)
 		if err != nil {
 			return nil, "", err
 		}
