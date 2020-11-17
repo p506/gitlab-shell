@@ -75,7 +75,7 @@ func NewHTTPClientWithOpts(gitlabURL, gitlabRelativeURLRoot, caFile, caPath stri
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("unknown gitlab URL prefix")
+		return nil, errors.New("unknown GitLab URL prefix")
 	}
 
 	c := &http.Client{
