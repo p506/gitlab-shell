@@ -45,7 +45,7 @@ func WithClientCert(certPath, keyPath string) HTTPClientOpt {
 	}
 }
 
-// Deprecated: use NewHTTPClientWithOpts
+// Deprecated: use NewHTTPClientWithOpts - https://gitlab.com/gitlab-org/gitlab-shell/-/issues/484
 func NewHTTPClient(gitlabURL, gitlabRelativeURLRoot, caFile, caPath string, selfSignedCert bool, readTimeoutSeconds uint64) *HttpClient {
 	c, err := NewHTTPClientWithOpts(gitlabURL, gitlabRelativeURLRoot, caFile, caPath, selfSignedCert, readTimeoutSeconds, nil)
 	if err != nil {
