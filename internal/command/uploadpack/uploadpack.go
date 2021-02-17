@@ -2,7 +2,6 @@ package uploadpack
 
 import (
 	"context"
-	"os"
 
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/commandargs"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/readwriter"
@@ -10,6 +9,7 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/shared/customaction"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/shared/disallowedcommand"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/config"
+	"gitlab.com/gitlab-org/gitlab-shell/internal/sshenv"
 )
 
 type Command struct {
@@ -43,7 +43,7 @@ func (c *Command) Execute(ctx context.Context) error {
 	if c.Args.RemoteAddr != nil {
 		gitProtocolVersion = c.Args.GitProtocolVersion
 	} else {
-		gitProtocolVersion = os.Getenv(commandargs.GitProtocolEnv)
+		gitProtocolVersion = sshenv.GitProtocolVersion()
 	}
 
 	return c.performGitalyCall(response, gitProtocolVersion)

@@ -18,6 +18,7 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/readwriter"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/config"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/gitlabnet/authorizedkeys"
+	"gitlab.com/gitlab-org/gitlab-shell/internal/sshenv"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/sync/semaphore"
 )
@@ -208,7 +209,7 @@ func handleSession(ctx context.Context, concurrentSessions *semaphore.Weighted, 
 				return
 			}
 			var accepted bool
-			if envRequest.Name == commandargs.GitProtocolEnv {
+			if envRequest.Name == sshenv.GitProtocolEnv {
 				gitProtocolVersion = envRequest.Value
 				accepted = true
 			}
