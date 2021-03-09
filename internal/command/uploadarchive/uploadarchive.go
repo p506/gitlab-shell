@@ -8,12 +8,14 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/shared/accessverifier"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/shared/disallowedcommand"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/config"
+	"gitlab.com/gitlab-org/gitlab-shell/internal/sshenv"
 )
 
 type Command struct {
 	Config     *config.Config
 	Args       *commandargs.Shell
 	ReadWriter *readwriter.ReadWriter
+	Env        sshenv.Env
 }
 
 func (c *Command) Execute(ctx context.Context) error {

@@ -2,7 +2,6 @@ package commandargs
 
 import (
 	"errors"
-	"net"
 	"regexp"
 
 	"github.com/mattn/go-shellwords"
@@ -31,10 +30,7 @@ type Shell struct {
 	GitlabKeyId    string
 	SshArgs        []string
 	CommandType    CommandType
-
-	// Only set when running standalone
-	RemoteAddr         *net.TCPAddr
-	GitProtocolVersion string
+	Env            sshenv.Env
 }
 
 func (s *Shell) Parse() error {
@@ -52,7 +48,7 @@ func (s *Shell) GetArguments() []string {
 }
 
 func (s *Shell) validate() error {
-	if !sshenv.IsSSHConnection() {
+	if !s.Env.IsSSHConnection {
 		return errors.New("Only SSH allowed")
 	}
 
@@ -64,7 +60,7 @@ func (s *Shell) validate() error {
 }
 
 func (s *Shell) isValidSSHCommand() bool {
-	err := s.ParseCommand(sshenv.OriginalCommand())
+	err := s.ParseCommand(s.Env.OriginalCommand)
 	return err == nil
 }
 

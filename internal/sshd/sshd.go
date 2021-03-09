@@ -230,9 +230,11 @@ func handleSession(ctx context.Context, concurrentSessions *semaphore.Weighted, 
 				req.Reply(true, []byte{})
 			}
 			args := &commandargs.Shell{
-				GitlabKeyId:        conn.Permissions.Extensions["key-id"],
-				RemoteAddr:         nconn.RemoteAddr().(*net.TCPAddr),
-				GitProtocolVersion: gitProtocolVersion,
+				GitlabKeyId: conn.Permissions.Extensions["key-id"],
+				Env: sshenv.Env{
+					GitProtocolVersion: gitProtocolVersion,
+					RemoteAddr:         nconn.RemoteAddr().(*net.TCPAddr).String(),
+				},
 			}
 
 			if err := args.ParseCommand(execCmd); err != nil {
@@ -241,7 +243,7 @@ func handleSession(ctx context.Context, concurrentSessions *semaphore.Weighted, 
 				return
 			}
 
-			cmd := command.BuildShellCommand(args, cfg, rw)
+			cmd := command.BuildShellCommand(args, args.Env, cfg, rw)
 			if cmd == nil {
 				fmt.Fprintf(ch.Stderr(), "Unknown command: %v\n", args.CommandType)
 				exitSession(ch, 128)

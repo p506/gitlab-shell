@@ -20,6 +20,7 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/uploadpack"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/config"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/executable"
+	"gitlab.com/gitlab-org/gitlab-shell/internal/sshenv"
 	"gitlab.com/gitlab-org/labkit/correlation"
 	"gitlab.com/gitlab-org/labkit/log"
 	"gitlab.com/gitlab-org/labkit/tracing"
@@ -29,13 +30,13 @@ type Command interface {
 	Execute(ctx context.Context) error
 }
 
-func New(e *executable.Executable, arguments []string, config *config.Config, readWriter *readwriter.ReadWriter) (Command, error) {
-	args, err := commandargs.Parse(e, arguments)
+func New(e *executable.Executable, arguments []string, env sshenv.Env, config *config.Config, readWriter *readwriter.ReadWriter) (Command, error) {
+	args, err := commandargs.Parse(e, arguments, env)
 	if err != nil {
 		return nil, err
 	}
 
-	if cmd := buildCommand(e, args, config, readWriter); cmd != nil {
+	if cmd := buildCommand(e, args, env, config, readWriter); cmd != nil {
 		if config.SslCertDir != "" {
 			os.Setenv("SSL_CERT_DIR", config.SslCertDir)
 		}
@@ -67,10 +68,10 @@ func ContextWithCorrelationID() (context.Context, func()) {
 	return ctx, finished
 }
 
-func buildCommand(e *executable.Executable, args commandargs.CommandArgs, config *config.Config, readWriter *readwriter.ReadWriter) Command {
+func buildCommand(e *executable.Executable, args commandargs.CommandArgs, env sshenv.Env, config *config.Config, readWriter *readwriter.ReadWriter) Command {
 	switch e.Name {
 	case executable.GitlabShell:
-		return BuildShellCommand(args.(*commandargs.Shell), config, readWriter)
+		return BuildShellCommand(args.(*commandargs.Shell), env, config, readWriter)
 	case executable.AuthorizedKeysCheck:
 		return buildAuthorizedKeysCommand(args.(*commandargs.AuthorizedKeys), config, readWriter)
 	case executable.AuthorizedPrincipalsCheck:
@@ -82,7 +83,7 @@ func buildCommand(e *executable.Executable, args commandargs.CommandArgs, config
 	return nil
 }
 
-func BuildShellCommand(args *commandargs.Shell, config *config.Config, readWriter *readwriter.ReadWriter) Command {
+func BuildShellCommand(args *commandargs.Shell, env sshenv.Env, config *config.Config, readWriter *readwriter.ReadWriter) Command {
 	switch args.CommandType {
 	case commandargs.Discover:
 		return &discover.Command{Config: config, Args: args, ReadWriter: readWriter}
@@ -93,9 +94,9 @@ func BuildShellCommand(args *commandargs.Shell, config *config.Config, readWrite
 	case commandargs.LfsAuthenticate:
 		return &lfsauthenticate.Command{Config: config, Args: args, ReadWriter: readWriter}
 	case commandargs.ReceivePack:
-		return &receivepack.Command{Config: config, Args: args, ReadWriter: readWriter}
+		return &receivepack.Command{Config: config, Env: env, Args: args, ReadWriter: readWriter}
 	case commandargs.UploadPack:
-		return &uploadpack.Command{Config: config, Args: args, ReadWriter: readWriter}
+		return &uploadpack.Command{Config: config, Env: env, Args: args, ReadWriter: readWriter}
 	case commandargs.UploadArchive:
 		return &uploadarchive.Command{Config: config, Args: args, ReadWriter: readWriter}
 	case commandargs.PersonalAccessToken:

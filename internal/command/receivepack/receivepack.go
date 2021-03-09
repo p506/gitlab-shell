@@ -16,6 +16,7 @@ type Command struct {
 	Config     *config.Config
 	Args       *commandargs.Shell
 	ReadWriter *readwriter.ReadWriter
+	Env        sshenv.Env
 }
 
 func (c *Command) Execute(ctx context.Context) error {
@@ -39,14 +40,7 @@ func (c *Command) Execute(ctx context.Context) error {
 		return customAction.Execute(ctx, response)
 	}
 
-	var gitProtocolVersion string
-	if c.Args.RemoteAddr != nil {
-		gitProtocolVersion = c.Args.GitProtocolVersion
-	} else {
-		gitProtocolVersion = sshenv.GitProtocolVersion()
-	}
-
-	return c.performGitalyCall(response, gitProtocolVersion)
+	return c.performGitalyCall(response)
 }
 
 func (c *Command) verifyAccess(ctx context.Context, repo string) (*accessverifier.Response, error) {

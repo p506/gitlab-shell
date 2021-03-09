@@ -7,38 +7,47 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/testhelper"
 )
 
-func TestGitProtocolVersion(t *testing.T) {
-	cleanup, err := testhelper.Setenv(GitProtocolEnv, "2")
-	require.NoError(t, err)
-	defer cleanup()
+func TestNewFromEnv(t *testing.T) {
+	tests := []struct {
+		desc        string
+		environment map[string]string
+		want        Env
+	}{
+		{
+			desc:        "It parses GIT_PROTOCOL",
+			environment: map[string]string{GitProtocolEnv: "2"},
+			want:        Env{GitProtocolVersion: "2"},
+		},
+		{
+			desc:        "It parses SSH_CONNECTION",
+			environment: map[string]string{SSHConnectionEnv: "127.0.0.1 0"},
+			want:        Env{IsSSHConnection: true, RemoteAddr: "127.0.0.1"},
+		},
+		{
+			desc:        "It parses SSH_ORIGINAL_COMMAND",
+			environment: map[string]string{SSHOriginalCommandEnv: "git-receive-pack"},
+			want:        Env{OriginalCommand: "git-receive-pack"},
+		},
+	}
 
-	require.Equal(t, GitProtocolVersion(), "2")
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			restoreEnv := testhelper.TempEnv(tc.environment)
+			defer restoreEnv()
+
+			require.Equal(t, NewFromEnv(), tc.want)
+		})
+	}
 }
 
-func TestIsSSHConnection(t *testing.T) {
+func TestRemoteAddr(t *testing.T) {
 	cleanup, err := testhelper.Setenv(SSHConnectionEnv, "127.0.0.1 0")
 	require.NoError(t, err)
 	defer cleanup()
 
-	require.Equal(t, IsSSHConnection(), true)
+	require.Equal(t, remoteAddr(), "127.0.0.1")
 }
 
-func TestLocalAddr(t *testing.T) {
-	cleanup, err := testhelper.Setenv(SSHConnectionEnv, "127.0.0.1 0")
-	require.NoError(t, err)
-	defer cleanup()
-
-	require.Equal(t, LocalAddr(), "127.0.0.1")
-}
-
-func TestEmptyLocalAddr(t *testing.T) {
-	require.Equal(t, LocalAddr(), "")
-}
-
-func TestOriginalCommand(t *testing.T) {
-	cleanup, err := testhelper.Setenv(SSHOriginalCommandEnv, "git-receive-pack")
-	require.NoError(t, err)
-	defer cleanup()
-
-	require.Equal(t, OriginalCommand(), "git-receive-pack")
+func TestEmptyRemoteAddr(t *testing.T) {
+	require.Equal(t, remoteAddr(), "")
 }
